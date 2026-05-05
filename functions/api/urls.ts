@@ -23,25 +23,44 @@ export async function onRequestPost(context) {
 
   try {
     const body = await request.json();
-    const { name, url, icon } = body;
+    const items = Array.isArray(body) ? body : [body];
 
-    if (!name || !url) {
+    if (items.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: name and url" }),
+        JSON.stringify({ error: "Request body cannot be empty" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    let finalIcon = icon;
-    if (!finalIcon) {
-      finalIcon = await fetchFaviconAsBase64(url);
+    const results = [];
+    const errors = [];
+
+    for (const item of items) {
+      const { name, url, icon } = item;
+
+      if (!name || !url) {
+        errors.push({ item, error: "Missing required fields: name and url" });
+        continue;
+      }
+
+      let finalIcon = icon;
+      if (!finalIcon) {
+        finalIcon = await fetchFaviconAsBase64(url);
+      }
+
+      await env.URL_STORE.put(name, JSON.stringify({ name, url, icon: finalIcon }));
+      results.push({ name, status: "saved" });
     }
 
-    await env.URL_STORE.put(name, JSON.stringify({ name, url, icon: finalIcon }));
+    const status = errors.length > 0 ? 207 : 200;
 
     return new Response(
-      JSON.stringify({ success: true, message: "URL saved successfully" }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      JSON.stringify({
+        success: results.length > 0,
+        results,
+        errors,
+      }),
+      { status, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
     return new Response(

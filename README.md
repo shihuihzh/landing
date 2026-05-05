@@ -51,6 +51,8 @@ npm run dev
 
 **POST** `/api/urls`
 
+支持发送单个对象或对象数组（批量添加）。
+
 **Request Body:**
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -59,18 +61,29 @@ npm run dev
 | url  | string | 是 | 目标 URL |
 | icon | string | 否 | 自定义图标 URL，不提供则自动获取 |
 
-**示例:**
+**示例 (单个):**
 ```bash
 curl -X POST http://localhost:8788/api/urls \
   -H "Content-Type: application/json" \
   -d '{"name": "google", "url": "https://google.com"}'
 ```
 
+**示例 (批量):**
+```bash
+curl -X POST http://localhost:8788/api/urls \
+  -H "Content-Type: application/json" \
+  -d '[{"name": "google", "url": "https://google.com"}, {"name": "github", "url": "https://github.com"}]'
+```
+
 **响应:**
 ```json
 {
   "success": true,
-  "message": "URL saved successfully"
+  "results": [
+    { "name": "google", "status": "saved" },
+    { "name": "github", "status": "saved" }
+  ],
+  "errors": []
 }
 ```
 
