@@ -51,6 +51,42 @@ export async function onRequestPost(context) {
   }
 }
 
+export async function onRequestDelete(context) {
+  const { request, env } = context;
+
+  try {
+    const body = await request.json();
+    const { name } = body;
+
+    if (!name) {
+      return new Response(
+        JSON.stringify({ error: "Missing required field: name" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const exists = await env.URL_STORE.get(name);
+    if (!exists) {
+      return new Response(
+        JSON.stringify({ error: "URL not found" }),
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    await env.URL_STORE.delete(name);
+
+    return new Response(
+      JSON.stringify({ success: true, message: "URL deleted successfully" }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: "Invalid request body" }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
 export async function onRequestGet(context) {
   const { env } = context;
 

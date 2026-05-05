@@ -15,7 +15,7 @@
 ```
 ├── functions/
 │   ├── api/
-│   │   └── urls.ts      # 链接管理 API (POST/GET)
+│   │   └── urls.ts      # 链接管理 API (POST/GET/DELETE)
 │   └── [name].ts        # 重定向路由 /{name}
 ├── public/
 │   └── index.html       # 前端页面
@@ -87,6 +87,31 @@ curl -X POST http://localhost:8788/api/urls \
     "icon": "data:image/x-icon;base64,..."
   }
 ]
+```
+
+### 删除链接
+
+**DELETE** `/api/urls`
+
+**Request Body:**
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| name | string | 是 | 要删除的链接名称 |
+
+**示例:**
+```bash
+curl -X DELETE http://localhost:8788/api/urls \
+  -H "Content-Type: application/json" \
+  -d '{"name": "google"}'
+```
+
+**响应:**
+```json
+{
+  "success": true,
+  "message": "URL deleted successfully"
+}
 ```
 
 ### 快速跳转

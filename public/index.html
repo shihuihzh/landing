@@ -56,11 +56,35 @@
       text-decoration: none;
       color: inherit;
       display: block;
+      position: relative;
     }
 
     .link-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: #e53e3e;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .link-card:hover .delete-btn {
+      opacity: 1;
+    }
+
+    .delete-btn:hover {
+      background: #c53030;
     }
 
     .link-icon {
@@ -158,16 +182,19 @@
 
         container.innerHTML = '<div class="links-grid">' +
           links.map(link => `
-            <a href="/${encodeURIComponent(link.name)}" class="link-card">
-              <div class="link-icon ${link.icon ? '' : 'placeholder'}">
-                ${link.icon 
-                  ? `<img src="${link.icon}" alt="${link.name}" onerror="this.parentElement.innerHTML='${link.name.charAt(0).toUpperCase()}'">`
-                  : link.name.charAt(0).toUpperCase()
-                }
-              </div>
-              <div class="link-name">${link.name}</div>
-              <div class="link-url">${link.url}</div>
-            </a>
+            <div class="link-card">
+              <button class="delete-btn" onclick="deleteLink('${link.name.replace(/'/g, "\\'")}', event)">Delete</button>
+              <a href="/${encodeURIComponent(link.name)}" style="text-decoration: none; color: inherit; display: block;">
+                <div class="link-icon ${link.icon ? '' : 'placeholder'}">
+                  ${link.icon 
+                    ? `<img src="${link.icon}" alt="${link.name}" onerror="this.parentElement.innerHTML='${link.name.charAt(0).toUpperCase()}'">`
+                    : link.name.charAt(0).toUpperCase()
+                  }
+                </div>
+                <div class="link-name">${link.name}</div>
+                <div class="link-url">${link.url}</div>
+              </a>
+            </div>
           `).join('') +
           '</div>';
       } catch (error) {
@@ -177,6 +204,29 @@
             <p>Please try again later</p>
           </div>
         `;
+      }
+    }
+
+    async function deleteLink(name, event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (!confirm(`Delete "${name}"?`)) return;
+
+      try {
+        const response = await fetch('/api/urls', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name }),
+        });
+
+        if (response.ok) {
+          loadLinks();
+        } else {
+          alert('Failed to delete link');
+        }
+      } catch (error) {
+        alert('Error deleting link');
       }
     }
 
