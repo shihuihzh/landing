@@ -38,6 +38,72 @@
     .subtitle {
       color: rgba(255, 255, 255, 0.8);
       font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .v6-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      color: white;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .v6-toggle:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .toggle-switch {
+      width: 40px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 11px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .toggle-switch.active {
+      background: #48bb78;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+    }
+
+    .toggle-switch.active::after {
+      transform: translateX(18px);
+    }
+
+    .v6-badge {
+      display: inline-block;
+      background: #48bb78;
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      margin-left: 0.5rem;
+      vertical-align: middle;
     }
 
     .links-grid {
@@ -155,6 +221,12 @@
     <header>
       <h1>Quick Links</h1>
       <p class="subtitle">Your personalized landing page</p>
+      <div class="header-controls">
+        <div class="v6-toggle" onclick="toggleIPv6()">
+          <span>IPv6</span>
+          <div class="toggle-switch" id="toggle-switch"></div>
+        </div>
+      </div>
     </header>
 
     <main id="links-container">
@@ -163,40 +235,61 @@
   </div>
 
   <script>
-    async function loadLinks() {
-      try {
-        const response = await fetch('/api/urls');
-        const links = await response.json();
+    let linksData = [];
+    let useIPv6 = localStorage.getItem('useIPv6') === 'true';
 
-        const container = document.getElementById('links-container');
+    function updateToggleState() {
+      const toggle = document.getElementById('toggle-switch');
+      if (toggle) toggle.classList.toggle('active', useIPv6);
+    }
 
-        if (links.length === 0) {
-          container.innerHTML = `
-            <div class="empty-state">
-              <h2>No links yet</h2>
-              <p>Add links by sending POST requests to /api/urls</p>
-            </div>
-          `;
-          return;
-        }
+    function getTargetUrl(link) {
+      return (useIPv6 && link.v6_url) ? link.v6_url : link.url;
+    }
 
-        container.innerHTML = '<div class="links-grid">' +
-          links.map(link => `
+    function renderLinks() {
+      const container = document.getElementById('links-container');
+
+      if (linksData.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h2>No links yet</h2>
+            <p>Add links by sending POST requests to /api/urls</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '<div class="links-grid">' +
+        linksData.map(link => {
+          const targetUrl = getTargetUrl(link);
+          const v6Badge = (useIPv6 && link.v6_url) ? '<span class="v6-badge">V6</span>' : '';
+          const isV6Active = useIPv6 && link.v6_url;
+          
+          return `
             <div class="link-card">
               <button class="delete-btn" onclick="deleteLink('${link.name.replace(/'/g, "\\'")}', event)">Delete</button>
-              <a href="/${encodeURIComponent(link.name)}" style="text-decoration: none; color: inherit; display: block;">
+              <a href="${isV6Active ? link.v6_url : '/' + encodeURIComponent(link.name)}" style="text-decoration: none; color: inherit; display: block;">
                 <div class="link-icon ${link.icon ? '' : 'placeholder'}">
                   ${link.icon 
                     ? `<img src="${link.icon}" alt="${link.name}" onerror="this.parentElement.innerHTML='${link.name.charAt(0).toUpperCase()}'">`
                     : link.name.charAt(0).toUpperCase()
                   }
                 </div>
-                <div class="link-name">${link.name}</div>
-                <div class="link-url">${link.url}</div>
+                <div class="link-name">${link.name}${v6Badge}</div>
+                <div class="link-url">${targetUrl}</div>
               </a>
             </div>
-          `).join('') +
-          '</div>';
+          `;
+        }).join('') +
+        '</div>';
+    }
+
+    async function loadLinks() {
+      try {
+        const response = await fetch('/api/urls');
+        linksData = await response.json();
+        renderLinks();
       } catch (error) {
         document.getElementById('links-container').innerHTML = `
           <div class="empty-state">
@@ -205,6 +298,13 @@
           </div>
         `;
       }
+    }
+
+    function toggleIPv6() {
+      useIPv6 = !useIPv6;
+      localStorage.setItem('useIPv6', useIPv6);
+      updateToggleState();
+      renderLinks();
     }
 
     async function deleteLink(name, event) {
@@ -231,6 +331,7 @@
     }
 
     loadLinks();
+    updateToggleState();
   </script>
 </body>
 </html>

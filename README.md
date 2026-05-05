@@ -4,6 +4,8 @@
 
 ## 功能特点
 
+- **IPv6 切换**: 支持配置 IPv4/IPv6 双地址，前端一键切换跳转
+- **增量更新**: 支持仅修改指定字段，无需覆盖整个对象
 - **动态链接管理**: 通过 API 添加和管理链接
 - **自动获取网站图标**: 未提供图标时自动抓取目标网站 favicon
 - **快速跳转**: 通过 `/{name}` 路径直接重定向到目标 URL
@@ -57,22 +59,23 @@ npm run dev
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| name | string | 是 | 链接名称（用作跳转路径） |
-| url  | string | 是 | 目标 URL |
-| icon | string | 否 | 自定义图标 URL，不提供则自动获取 |
+| name | string | 是 | 链接名称（用作主键） |
+| url  | string | 创建时必填 | 目标 URL (IPv4) |
+| v6_url | string | 否 | 目标 URL (IPv6) |
+| icon | string | 否 | 自定义图标 URL，不提供则自动抓取 |
 
-**示例 (单个):**
+**示例 (创建):**
 ```bash
 curl -X POST http://localhost:8788/api/urls \
   -H "Content-Type: application/json" \
-  -d '{"name": "google", "url": "https://google.com"}'
+  -d '{"name": "google", "url": "https://google.com", "v6_url": "https://ipv6.google.com"}'
 ```
 
-**示例 (批量):**
+**示例 (增量更新):**
 ```bash
 curl -X POST http://localhost:8788/api/urls \
   -H "Content-Type: application/json" \
-  -d '[{"name": "google", "url": "https://google.com"}, {"name": "github", "url": "https://github.com"}]'
+  -d '{"name": "google", "v6_url": "https://new-ipv6.google.com"}'
 ```
 
 **响应:**
@@ -175,6 +178,8 @@ npm run deploy
 
 ## 注意事项
 
+- **增量更新**: POST 请求仅更新提供的字段，未提供的字段保持不变
+- **IPv6 切换**: 前端 Toggle 开启后，点击卡片将优先跳转 `v6_url`
 - **KV 存储延迟**: Cloudflare KV 存在最终一致性，写入后可能需要几秒才能在全球节点同步
 - **Base64 图标**: 自动获取的 favicon 会转为 base64 存储在 KV 中，每个 key 最大支持 25MB
 - **批量操作**: POST 和 DELETE 支持批量处理，部分失败时返回 `207 Multi-Status` 状态码

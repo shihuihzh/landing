@@ -36,22 +36,34 @@ export async function onRequestPost(context) {
     const errors = [];
 
     for (const item of items) {
-      let { name, url, icon } = item;
+      let { name } = item;
       
-      if (!name || !url) {
-        errors.push({ item, error: "Missing required fields: name and url" });
+      if (!name) {
+        errors.push({ item, error: "Missing required field: name" });
         continue;
       }
 
-      // 规范化 name，去除首尾空格
       name = name.trim();
 
-      let finalIcon = icon;
-      if (!finalIcon) {
-        finalIcon = await fetchFaviconAsBase64(url);
+      // 获取已有数据以进行合并更新
+      let existingData = {};
+      const existingValue = await env.URL_STORE.get(name);
+      if (existingValue) {
+        existingData = JSON.parse(existingValue);
       }
 
-      await env.URL_STORE.put(name, JSON.stringify({ name, url, icon: finalIcon }));
+      // 合并数据：只更新提供的字段
+      const mergedData = { ...existingData, ...item, name };
+
+      // 如果更新了 url 且未提供新的 icon，自动抓取新 url 的 favicon
+      if (item.url && !item.icon) {
+        const urlToFetch = item.url || existingData.url;
+        if (urlToFetch) {
+          mergedData.icon = await fetchFaviconAsBase64(urlToFetch);
+        }
+      }
+
+      await env.URL_STORE.put(name, JSON.stringify(mergedData));
       results.push({ name, status: "saved" });
     }
 
