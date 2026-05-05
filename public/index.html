@@ -236,7 +236,12 @@
 
   <script>
     let linksData = [];
-    let useIPv6 = localStorage.getItem('useIPv6') === 'true';
+    
+    // 自动检测当前是否为 IPv6 访问
+    const isIPv6Host = window.location.hostname.includes(':');
+    let useIPv6 = localStorage.getItem('useIPv6') !== null 
+      ? localStorage.getItem('useIPv6') === 'true' 
+      : isIPv6Host;
 
     function updateToggleState() {
       const toggle = document.getElementById('toggle-switch');
@@ -264,12 +269,11 @@
         linksData.map(link => {
           const targetUrl = getTargetUrl(link);
           const v6Badge = (useIPv6 && link.v6_url) ? '<span class="v6-badge">V6</span>' : '';
-          const isV6Active = useIPv6 && link.v6_url;
           
           return `
             <div class="link-card">
               <button class="delete-btn" onclick="deleteLink('${link.name.replace(/'/g, "\\'")}', event)">Delete</button>
-              <a href="${isV6Active ? link.v6_url : '/' + encodeURIComponent(link.name)}" style="text-decoration: none; color: inherit; display: block;">
+              <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; display: block;">
                 <div class="link-icon ${link.icon ? '' : 'placeholder'}">
                   ${link.icon 
                     ? `<img src="${link.icon}" alt="${link.name}" onerror="this.parentElement.innerHTML='${link.name.charAt(0).toUpperCase()}'">`
