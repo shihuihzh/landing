@@ -1,0 +1,7 @@
+name = "landing"
+compatibility_date = "2025-05-01"
+pages_build_output_dir = "public"
+
+[[kv_namespaces]]
+binding = "URL_STORE"
+id = "98a81f4ac58d464693fdaa50644a551f"
