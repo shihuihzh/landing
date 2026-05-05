@@ -75,28 +75,34 @@ export async function onRequestDelete(context) {
 
   try {
     const body = await request.json();
-    const { name } = body;
+    const names = body.names || (body.name ? [body.name] : []);
 
-    if (!name) {
+    if (names.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Missing required field: name" }),
+        JSON.stringify({ error: "Missing required field: name or names" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const exists = await env.URL_STORE.get(name);
-    if (!exists) {
-      return new Response(
-        JSON.stringify({ error: "URL not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
+    const results = [];
+    const errors = [];
+
+    for (const name of names) {
+      const exists = await env.URL_STORE.get(name);
+      if (!exists) {
+        errors.push({ name, error: "URL not found" });
+        continue;
+      }
+
+      await env.URL_STORE.delete(name);
+      results.push({ name, status: "deleted" });
     }
 
-    await env.URL_STORE.delete(name);
+    const status = errors.length > 0 ? 207 : 200;
 
     return new Response(
-      JSON.stringify({ success: true, message: "URL deleted successfully" }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      JSON.stringify({ success: results.length > 0, results, errors }),
+      { status, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
     return new Response(

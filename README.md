@@ -106,24 +106,41 @@ curl -X POST http://localhost:8788/api/urls \
 
 **DELETE** `/api/urls`
 
-**Request Body:**
+支持删除单个或批量删除多个链接。
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| name | string | 是 | 要删除的链接名称 |
+**Request Body (单个):**
+```json
+{ "name": "google" }
+```
 
-**示例:**
+**Request Body (批量):**
+```json
+{ "names": ["google", "github"] }
+```
+
+**示例 (单个):**
 ```bash
 curl -X DELETE http://localhost:8788/api/urls \
   -H "Content-Type: application/json" \
   -d '{"name": "google"}'
 ```
 
+**示例 (批量):**
+```bash
+curl -X DELETE http://localhost:8788/api/urls \
+  -H "Content-Type: application/json" \
+  -d '{"names": ["google", "github"]}'
+```
+
 **响应:**
 ```json
 {
   "success": true,
-  "message": "URL deleted successfully"
+  "results": [
+    { "name": "google", "status": "deleted" },
+    { "name": "github", "status": "deleted" }
+  ],
+  "errors": []
 }
 ```
 
@@ -151,6 +168,16 @@ npx wrangler kv:namespace create "URL_STORE"
 ```bash
 npm run deploy
 ```
+
+## 前端使用
+
+在主页面上，每个链接卡片右上角悬停时会显示 **Delete** 按钮，点击即可删除该链接。
+
+## 注意事项
+
+- **KV 存储延迟**: Cloudflare KV 存在最终一致性，写入后可能需要几秒才能在全球节点同步
+- **Base64 图标**: 自动获取的 favicon 会转为 base64 存储在 KV 中，每个 key 最大支持 25MB
+- **批量操作**: POST 和 DELETE 支持批量处理，部分失败时返回 `207 Multi-Status` 状态码
 
 ## 技术栈
 
