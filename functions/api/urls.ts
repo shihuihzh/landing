@@ -36,12 +36,15 @@ export async function onRequestPost(context) {
     const errors = [];
 
     for (const item of items) {
-      const { name, url, icon } = item;
-
+      let { name, url, icon } = item;
+      
       if (!name || !url) {
         errors.push({ item, error: "Missing required fields: name and url" });
         continue;
       }
+
+      // 规范化 name，去除首尾空格
+      name = name.trim();
 
       let finalIcon = icon;
       if (!finalIcon) {
@@ -88,14 +91,15 @@ export async function onRequestDelete(context) {
     const errors = [];
 
     for (const name of names) {
-      const exists = await env.URL_STORE.get(name);
+      const sanitizedName = name.trim();
+      const exists = await env.URL_STORE.get(sanitizedName);
       if (!exists) {
         errors.push({ name, error: "URL not found" });
         continue;
       }
 
-      await env.URL_STORE.delete(name);
-      results.push({ name, status: "deleted" });
+      await env.URL_STORE.delete(sanitizedName);
+      results.push({ name: sanitizedName, status: "deleted" });
     }
 
     const status = errors.length > 0 ? 207 : 200;
