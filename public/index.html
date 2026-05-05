@@ -236,12 +236,7 @@
 
   <script>
     let linksData = [];
-    
-    // 自动检测当前是否为 IPv6 访问
-    const isIPv6Host = window.location.hostname.includes(':');
-    let useIPv6 = localStorage.getItem('useIPv6') !== null 
-      ? localStorage.getItem('useIPv6') === 'true' 
-      : isIPv6Host;
+    let useIPv6 = localStorage.getItem('useIPv6') === 'true';
 
     function updateToggleState() {
       const toggle = document.getElementById('toggle-switch');
