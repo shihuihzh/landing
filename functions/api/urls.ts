@@ -1,9 +1,6 @@
-async function fetchFaviconAsBase64(url) {
+async function fetchAndCacheIcon(iconUrl) {
   try {
-    const { origin } = new URL(url);
-    const faviconUrl = `${origin}/favicon.ico`;
-
-    const response = await fetch(faviconUrl, { cf: { cacheTTL: 86400, cacheEverything: true } });
+    const response = await fetch(iconUrl, { cf: { cacheTTL: 86400, cacheEverything: true } });
     if (!response.ok) return null;
 
     const buffer = await response.arrayBuffer();
@@ -58,10 +55,21 @@ export async function onRequestPost(context) {
       // 更新时间戳
       mergedData.updated_at = new Date().toISOString();
 
-      // 无论是否提供 icon，只要有 url 就抓取并缓存 favicon
-      const urlToFetch = item.url || existingData.url;
-      if (urlToFetch) {
-        mergedData.cache_icon = await fetchFaviconAsBase64(urlToFetch);
+      // 缓存图标逻辑
+      if (item.icon) {
+        // 如果提供了 icon，抓取提供的 icon URL
+        mergedData.cache_icon = await fetchAndCacheIcon(item.icon);
+      } else {
+        // 如果没提供 icon，抓取目标网站的 favicon.ico
+        const targetUrl = item.url || existingData.url;
+        if (targetUrl) {
+          try {
+            const { origin } = new URL(targetUrl);
+            mergedData.cache_icon = await fetchAndCacheIcon(`${origin}/favicon.ico`);
+          } catch {
+            mergedData.cache_icon = null;
+          }
+        }
       }
 
       await env.URL_STORE.put(name, JSON.stringify(mergedData));
