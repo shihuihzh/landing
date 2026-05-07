@@ -55,6 +55,9 @@ export async function onRequestPost(context) {
       // 合并数据：只更新提供的字段
       const mergedData = { ...existingData, ...item, name };
 
+      // 更新时间戳
+      mergedData.updated_at = new Date().toISOString();
+
       // 如果更新了 url 且未提供新的 icon，自动抓取新 url 的 favicon
       if (item.url && !item.icon) {
         const urlToFetch = item.url || existingData.url;
