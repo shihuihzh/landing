@@ -62,7 +62,9 @@ npm run dev
 | name | string | 是 | 链接名称（用作主键） |
 | url  | string | 创建时必填 | 目标 URL (IPv4) |
 | v6_url | string | 否 | 目标 URL (IPv6) |
-| icon | string | 否 | 自定义图标 URL，不提供则自动抓取 |
+| icon | string | 否 | 自定义图标 URL（可选） |
+
+**图标说明**: 无论是否提供 `icon`，系统都会自动抓取目标网站的 favicon 并转为 base64 保存在 `cache_icon` 字段中。前端优先使用 `cache_icon`。
 
 **示例 (创建):**
 ```bash

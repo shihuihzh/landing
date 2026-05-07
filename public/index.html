@@ -371,9 +371,9 @@
             <div class="link-card">
               <button class="delete-btn" onclick="deleteLink('${link.name.replace(/'/g, "\\'")}', event)">Delete</button>
               <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; display: block;">
-                <div class="link-icon ${link.icon ? '' : 'placeholder'}">
-                  ${link.icon 
-                    ? `<img src="${link.icon}" alt="${link.name}" onerror="this.parentElement.innerHTML='${link.name.charAt(0).toUpperCase()}'">`
+                <div class="link-icon ${link.cache_icon || link.icon ? '' : 'placeholder'}">
+                  ${(link.cache_icon || link.icon)
+                    ? `<img src="${link.cache_icon || link.icon}" alt="${link.name}" onerror="this.parentElement.innerHTML='${link.name.charAt(0).toUpperCase()}'">`
                     : link.name.charAt(0).toUpperCase()
                   }
                 </div>

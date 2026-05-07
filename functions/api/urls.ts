@@ -58,12 +58,10 @@ export async function onRequestPost(context) {
       // 更新时间戳
       mergedData.updated_at = new Date().toISOString();
 
-      // 如果更新了 url 且未提供新的 icon，自动抓取新 url 的 favicon
-      if (item.url && !item.icon) {
-        const urlToFetch = item.url || existingData.url;
-        if (urlToFetch) {
-          mergedData.icon = await fetchFaviconAsBase64(urlToFetch);
-        }
+      // 无论是否提供 icon，只要有 url 就抓取并缓存 favicon
+      const urlToFetch = item.url || existingData.url;
+      if (urlToFetch) {
+        mergedData.cache_icon = await fetchFaviconAsBase64(urlToFetch);
       }
 
       await env.URL_STORE.put(name, JSON.stringify(mergedData));
